@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kubestash-v2.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "kubestash-v2.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
+      protocol: TCP
+  selector:
+    {{- include "kubestash-v2.selectorLabels" . | nindent 4 }}

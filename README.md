@@ -19,7 +19,7 @@ will be synced in k8s as `test` namespace in `mysecret` Opaque secret with `TEST
 > 2. `.` & `-` will be replaced to `_`.  
 
 The sync will happen one way i.e from DDB table to K8s secret. Manually created secrets will not be touched and remain as it is if they are not present in DDB table.
-
+DDB table will be taken as source of truth for sync operation.
 
 ## Before We Start
 We've following requirments:
@@ -86,7 +86,8 @@ We've following requirments:
 > based on your EKS configuration. 
 
 - Prometheus and Grafana Monitoring for visualisation and alerts.
-### Key Featuers
+
+## Key Featuers
   1. Listen the secrets changes in table in real time.
   1. Able to log the steps it’s doing
   1. Debug mode for more verbose logging
@@ -98,8 +99,11 @@ We've following requirments:
   1. Dry Run mode to observe the behaviour of application
   1. Starts the sync process as soon as deployment comes up and thereafter based on DDB events or cron timeperiod.
   1. Cancel and restart itself if stuck in data fetch and sync step more than given time.
-  1. Manually created secrets will be entacted if they are not present in DynamoDB table else it will be replaced with table value.
+  1. Manually created secrets will be untouched if they are not present in DynamoDB table else it will be replaced with table value.
   1. Will add annotation in secret for time when it is updated.
+  1. There will be rate limit on flask-server `/syncnow` api call as well. [1 request per 10 min] However this is configurable in code.
+  1. 1 replica for application will be running and will restart itself in [Recreate](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#recreate-deployment) mode.   
+
 
 ## Enviroments Variables
 |               Parameter                     |                          Description                         |                       Default                     |

@@ -1,0 +1,123 @@
+# Default values for kubestash-v2.
+namespace: kubestash-v2
+nameOverride: kubestash-v2
+fullnameOverride: kubestash-v2
+
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::<AWS_Account_ID>:role/<IAM_ROLE_NAME>
+  name: kubestash-v2
+
+service:
+  port: 80
+  targetPort: 8080
+
+image:
+  repository: <MAIN_APP_IMAGE>
+  tag: <MAIN_APP_TAG>
+  pullPolicy: Always
+
+replicaCount: 1
+imagePullSecrets: []
+
+podAnnotations:
+  prometheus.app/port: "8000"
+  prometheus.app/scrape: "true"
+securityContext: {}
+nodeSelector: {}
+resources:
+  limits:
+    cpu: 2000m
+    memory: 1024Mi
+  requests:
+    cpu: 1000m
+    memory: 512Mi
+
+tolerations: []
+affinity: {}
+sidecar:
+  enabled: true
+  name: kubestash-v2-cron
+  image: <SIDECAR_IAMGE>:<SIDECAR_IMAGE_TAG>
+  pullPolicy: Always
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+#### Change env vars here only ####
+env: stage
+cluster_name: ""
+ddb_table: ""
+table_region: "ap-south-1"
+stream_arn: ""
+namespace_exclude_filter: "kube-system|kubestash-v2|kubestash"
+wait_time: 120
+# Hours at which cron will trigger manual sync
+cron_hours: 3
+# Default is false. Set it "true" for debugging purpose only.
+verbose: ""
+# Update/Create APIs for secret won't actully updating the secret.
+dry_run: "true"
+http_timeout: 15
+prometheus_multiproc_dir: "./prom"
+credstash_sync_timeout_secs: 300
+
+globalEnvs:
+  ####################################
+  # Note: You don't need to do anything in here. 
+  # please set the values at the top of this file instead !!!
+  ####################################
+  - name: ENV
+    value: "{{ .Values.env }}"
+
+  # Name of the cluster where app is running
+  - name: CLUSTER_NAME
+    value: "{{ .Values.cluster_name }}"
+
+  # DynamoDB table name for fetching the secrets
+  - name: DDB_TABLE
+    value: "{{ .Values.ddb_table }}"
+
+  # DynamoDB table region
+  - name: TABLE_REGION
+    value: "{{  .Values.table_region }}"
+
+  # ARN for the table stream to be listened
+  - name: STREAM_ARN
+    value: "{{ .Values.stream_arn }}"
+
+  # Filter Format Example: 'ns1|ns2|ns3' or 'ns1'
+  - name: NAMESPACE_EXCLUDE_FILTER
+    value: "{{ .Values.namespace_exclude_filter }}"
+
+  # Wait time after which DDB fetch operation will start after table update event
+  - name: WAIT_TIME
+    value: "{{ .Values.wait_time }}"
+
+  # https://github.com/prometheus/client_python/tree/master#multiprocess-mode-eg-gunicorn
+  - name: PROMETHEUS_MULTIPROC_DIR
+    value: "{{ .Values.prometheus_multiproc_dir }}"
+
+  # Timeout for the kubernetes API calls.
+  - name: HTTP_TIMEOUT
+    value: "{{ .Values.http_timeout }}"
+
+  - name: VERBOSE
+    value: "{{ .Values.verbose }}"
+
+  - name: DRY_RUN
+    value: "{{ .Values.dry_run }}"
+
+  - name: CREDSTASH_SYNC_TIMEOUT_SECS
+    value: "{{ .Values.credstash_sync_timeout_secs }}"
+
+  # API key to validate the request to start sync operation
+  - name: FLASK_API_KEY
+    valueFrom:
+      secretKeyRef:
+        key: FLASK_API_KEY
+        name: kubestash-v2

@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kubestash-v2.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "kubestash-v2.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "kubestash-v2.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "kubestash-v2.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "kubestash-v2.serviceAccountName" . }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            {{- range .Values.globalEnvs }}
+            - name: {{ .name | quote }}
+              {{- if .value }}
+              value: {{ with .value }}{{ tpl . $ | quote }}{{- end }}
+              {{- end }}
+              {{- if .valueFrom }}
+              valueFrom:
+{{ .valueFrom | toYaml | indent 16 }}
+              {{- end }}
+            {{- end }}
+          ports:
+            - name: {{ include "kubestash-v2.fullname" . }}
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          livenessProbe:
+            exec:
+              command:
+              - grep
+              - Healthy 
+              - ./prom/status
+            initialDelaySeconds: 60
+            periodSeconds: 300
+            timeoutSeconds: 4
+            failureThreshold: 2
+            terminationGracePeriodSeconds: 300
+          readinessProbe:
+            exec:
+              command:
+              - grep
+              - Healthy 
+              - ./prom/status
+            initialDelaySeconds: 60
+            periodSeconds: 300
+            timeoutSeconds: 4
+            failureThreshold: 2
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+
+          {{- if .Values.sidecar.enabled }}
+        - name: {{ .Values.sidecar.name }}
+          image: {{ .Values.sidecar.image }}
+          imagePullPolicy: {{ .Values.sidecar.pullPolicy }}
+          env:
+            - name: "ENV"
+              value: "{{ .Values.env }}"
+            - name: "WAIT_TIME"
+              value: "{{ .Values.wait_time }}"
+            - name: "CRON_HOURS"
+              value: "{{ .Values.cron_hours }}"
+            - name: "VERBOSE"
+              value: "{{ .Values.verbose }}"
+            - name: "FLASK_API_KEY"
+              valueFrom:
+                secretKeyRef:
+                  key: FLASK_API_KEY
+                  name: kubestash-v2
+          resources:
+            {{- toYaml .Values.sidecar.resources | nindent 12 }}
+          {{ end }}
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        options:
+        - name: ndots
+          value: "1"
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

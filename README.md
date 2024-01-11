@@ -18,6 +18,8 @@ will be synced in k8s as `test` namespace in `mysecret` Opaque secret with `TEST
 > 1. TEST_KEY will be converted to CAPS if in small.
 > 2. `.` & `-` will be replaced to `_`.  
 
+The sync will happen one way i.e from DDB table to K8s secret. Manually created secrets will not be touched and remain as it is if they are not present in DDB table.
+
 
 ## Before We Start
 We've following requirments:
@@ -96,6 +98,8 @@ We've following requirments:
   1. Dry Run mode to observe the behaviour of application
   1. Starts the sync process as soon as deployment comes up and thereafter based on DDB events or cron timeperiod.
   1. Cancel and restart itself if stuck in data fetch and sync step more than given time.
+  1. Manually created secrets will be entacted if they are not present in DynamoDB table else it will be replaced with table value.
+  1. Added annotation in secret for time when it is updated. 
 
 ## Enviroments Variables
 |               Parameter                     |                          Description                         |                       Default                     |

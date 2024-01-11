@@ -1356,8 +1356,8 @@
       {
         "current": {
           "selected": false,
-          "text": "dev-serve",
-          "value": "dev-serve"
+          "text": "stage",
+          "value": "stage"
         },
         "datasource": {
           "type": "prometheus",
@@ -1383,8 +1383,8 @@
       {
         "current": {
           "selected": false,
-          "text": "dev-serve",
-          "value": "dev-serve"
+          "text": "stage",
+          "value": "stage"
         },
         "hide": 0,
         "includeAll": false,
@@ -1394,16 +1394,11 @@
         "options": [
           {
             "selected": true,
-            "text": "dev-serve",
-            "value": "dev-serve"
-          },
-          {
-            "selected": false,
-            "text": "stage-white-infra",
-            "value": "stage-white-infra"
+            "text": "stage",
+            "value": "stage"
           }
         ],
-        "query": "dev-serve,stage-white-infra",
+        "query": "stage",
         "queryValue": "",
         "skipUrlSync": false,
         "type": "custom"

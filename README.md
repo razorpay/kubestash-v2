@@ -99,7 +99,7 @@ We've following requirments:
   1. Starts the sync process as soon as deployment comes up and thereafter based on DDB events or cron timeperiod.
   1. Cancel and restart itself if stuck in data fetch and sync step more than given time.
   1. Manually created secrets will be entacted if they are not present in DynamoDB table else it will be replaced with table value.
-  1. Added annotation in secret for time when it is updated. 
+  1. Will add annotation in secret for time when it is updated.
 
 ## Enviroments Variables
 |               Parameter                     |                          Description                         |                       Default                     |
@@ -116,6 +116,7 @@ We've following requirments:
 | `dry_run`                                   | Update/Create APIs for secret won't actully updating the secret. | `true`                                        |
 | `http_timeout`                              | Timeout for Kubernetes APIs call                             | `15`                                              |
 | `prometheus_multiproc_dir`                  | Directroy/file for metrics capturing in multiprocessing      | `./prom`                                          |
+| `credstash_sync_timeout_secs`               | Timeout seconds after which sync operation got cancelled and app is restarted.    | `300`                        |
 ## Metrics Description
 
 We are exposing below prometheus metrics in order to have better monitoring in our application. Along with kubernetes metrics, we can create reliable alerts and monitoring system for ourselves. Please refer `monitoring` directory for dashboards.

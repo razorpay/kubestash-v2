@@ -1,5 +1,5 @@
 # Kubestash-V2
-Sync key-value pair from DDB Credstash table to Kubernetes secrets.
+Sync key-value pair from AWS DynamoDB Credstash table to Kubernetes EKS secrets.
 
 Accepted format in Key-Value table:
 - namespace/secret-name/KEY
@@ -98,17 +98,45 @@ We've following requirments:
   1. Cancel and restart itself if stuck in data fetch and sync step more than given time.
 
 ## Enviroments Variables
-
+|               Parameter                     |                          Description                         |                       Default                     |
+| ------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------- |
+| `env`                                       | Environment in which application is running. Ex: stage/prod  | `stage`                                           |
+| `cluster_name`                              | Name of EKS cluster                                          | NULL                                              |
+| `ddb_table`                                 | Dynamo DB Table Name                                         | NULL                                              |
+| `table_region`                              | AWS Region for DynamoDB Table                                | `ap-south-1`                                      |
+| `stream_arn`                                | ARN for DynamoDB Stream                                      | NULL                                              |
+| `namespace_exclude_filter`                  | Namespace seperated by `\|` excluded from syncing by app     | `kube-system\|kubestash-v2\|kubestash`            |
+| `wait_time`                                 | Wait seconds after app receive the changes in DDB table and start sync operation | `120`                         |
+| `cron_hours`                                | Hours at which cron will trigger manual sync                 | `3`                                               |
+| `verbose`                                   | Default is false. Set it "true" for debugging purpose only.  | `""`                                              |
+| `dry_run`                                   | Update/Create APIs for secret won't actully updating the secret. | `true`                                        |
+| `http_timeout`                              | Timeout for Kubernetes APIs call                             | `15`                                              |
+| `prometheus_multiproc_dir`                  | Directroy/file for metrics capturing in multiprocessing      | `./prom`                                          |
 ## Metrics Description
+
+We are exposing below prometheus metrics in order to have better monitoring in our application. Along with kubernetes metrics, we can create reliable alerts and monitoring system for ourselves. Please refer `monitoring` directory for dashboards.
+|                Metrics                      |                          Description                         |
+| ------------------------------------------- | ------------------------------------------------------------ |
+| `kubestash_v2_settings`                     | Settings currently used by kubestash                         |
+| `kubestash_key_synced_failed_status`        | Gauge with failed keys. 1 for failed. 0 for normal           |
+| `kubestash_table_fetch_status`              | Gauge with stucked table status. 1 or failed. 0 for normal   |
+| `kubestash_429_requests_count`              | Counter for bad requests                                     |
+| `kubestash_404_request_count`               | Counter for non found requests                               |
+| `kubestash_400_request_count`               | Counter for malformed requests                               |
+| `kubestash_500_request_count`               | Counter for internal server error                            |
+| `kubestash_200_request_count`               | Counter for valid request                                    |
+| `kubestash_ddb_fetch_seconds`               | Time spent fetching DDB data                                 |
 
 ## Deployment Nuances
 - Create namespace `kubestash-v2` and Opaque secret `kubestash-v2` with `FLASK_API_KEY` val before deployment of helm-chart.
 > [!NOTE]
 > FLASK_API_KEY will be used to trigger manual sync operation as well as by our cron that is running along with our main container.
-- Please update parametes in `values.yaml` based on your infra.  
+- [Build](https://docs.docker.com/engine/reference/commandline/build/) MAIN docker image using `src/Dockerfile` and push it to your registry. We are not building/pushing the image as of now.
+- Build SIDECAR docker image using `cron/Dockerfile` and push it to your registry. We are not building/pushing the image as of now.
+- Please update parametes in `deployment/helm-charts/values.yaml` based on your infra and above docker builds. 
 
 ## Feature Request/Issue
-Please follow the template attached to rasie an issue OR mail us at `devops@razorpay.com`
+Please follow the template attached to rasie an issue OR mail us at `devops+kubestash@razorpay.com`
 
 ## TODO
 1. Remove hardcoded namespace requirment `kubestash-v2`

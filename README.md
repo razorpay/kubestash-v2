@@ -19,7 +19,7 @@ will be synced in k8s as `test` namespace in `mysecret` Opaque secret with `TEST
 > 2. `.` & `-` will be replaced to `_`.  
 
 
-### Before We Start
+## Before We Start
 We've following requirments:
 - [Credstash](https://github.com/fugue/credstash) Table in AWS
 - OIDC enabled Kubernetes Cluster with version 1.22 and above with kube-state-metrics.
@@ -97,11 +97,11 @@ We've following requirments:
   1. Starts the sync process as soon as deployment comes up and thereafter based on DDB events or cron timeperiod.
   1. Cancel and restart itself if stuck in data fetch and sync step more than given time.
 
-### Enviroments Variables
+## Enviroments Variables
 
-### Metrics Description
+## Metrics Description
 
-### Deployment Nuances
+## Deployment Nuances
 - Create namespace `kubestash-v2` and Opaque secret `kubestash-v2` with `FLASK_API_KEY` val before deployment of helm-chart.
 > [!NOTE]
 > FLASK_API_KEY will be used to trigger manual sync operation as well as by our cron that is running along with our main container.

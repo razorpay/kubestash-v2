@@ -1,4 +1,10 @@
 # Kubestash-V2
+We're using the [Kubestash](https://github.com/razorpay/kubestash) to sync our secrets but earlier has **problems related to logging, metrics and no crashloop recovery**.
+We've faced lot of incidents due to mismatch of secrets when application got crashed and no proper alerts were present to notifiy them.
+Keeping above in place, we've introduced `Kubestash-V2` to tackle those problems.  
+
+
+--------------------------------------------------------------------------------------
 Sync key-value pair from AWS DynamoDB Credstash table to Kubernetes EKS secrets.
 
 Accepted format in Key-Value table:

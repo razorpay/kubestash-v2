@@ -7,3 +7,5 @@ waitress==2.0.0
 flask-limiter==3.5.0
 pytz==2023.3
 cmake==3.27.2
+google-cloud-bigtable==2.28.1
+google-cloud-pubsub==2.28.0

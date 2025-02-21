@@ -1,5 +1,5 @@
 from prometheus_client import CollectorRegistry, multiprocess, start_http_server
-from ddbmonitor import init_ddbwatch
+from src.secret_fetcher.dynamodb.ddbmonitor import init_ddbwatch
 from helpers import statusFile, run_cpu_tasks_in_parallel 
 from flaskServer import initFlaskServer
 

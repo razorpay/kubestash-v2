@@ -1,8 +1,13 @@
 import collections, time, typing, pytz, boto3
 from  multiprocessing import Process
 from datetime import datetime
-from helpers import GracefulKiller, syncSecretFromDDB
-from helpers import UPDATING_SECRETS, WAIT_TIME, STREAM_ARN
+
+from src.helpers.graceful_killer import GracefulKiller
+
+# from helpers import GracefulKiller, syncSecretFromDDB
+# from helpers import UPDATING_SECRETS, WAIT_TIME, STREAM_ARN
+
+
 
 Shard = collections.namedtuple(
     typename="Shard",

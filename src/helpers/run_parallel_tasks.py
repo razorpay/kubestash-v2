@@ -1,5 +1,5 @@
 from concurrent.futures import ProcessPoolExecutor
-from src.helpers.status_file import statusFile
+from helpers.status_file import statusFile
 
 # To run jobs in parallel
 def run_cpu_tasks_in_parallel(tasks):

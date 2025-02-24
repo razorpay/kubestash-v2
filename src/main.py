@@ -1,12 +1,13 @@
 from prometheus_client import CollectorRegistry, multiprocess, start_http_server
-from src.secret_fetcher.dynamodb.ddbmonitor import init_ddbwatch
-from helpers import statusFile, run_cpu_tasks_in_parallel 
+from secret_fetcher.dynamodb.ddbmonitor import init_ddbwatch
+from helpers.status_file import statusFile
+from helpers.run_parallel_tasks import run_cpu_tasks_in_parallel
 from flaskServer import initFlaskServer
 
 
 if __name__ == "__main__":
   try:
-    print("Main:Started listning the change in Secrets...")
+    print("Main:Started listening the change in Secrets...")
     statusFile()
     registry = CollectorRegistry()
     multiprocess.MultiProcessCollector(registry)
@@ -17,5 +18,5 @@ if __name__ == "__main__":
         initFlaskServer,
     ])
   except Exception as e:
-    print("Main:Exception in listning changes in DDB. %s\n" % e)
+    print("Main:Exception in listening changes in DDB/Bigtable. %s\n" % e)
     statusFile("Fail")

@@ -1,13 +1,10 @@
 import collections, time, typing, pytz, boto3
-from  multiprocessing import Process
+from multiprocessing import Process
 from datetime import datetime
 
-from src.helpers.graceful_killer import GracefulKiller
-
-# from helpers import GracefulKiller, syncSecretFromDDB
-# from helpers import UPDATING_SECRETS, WAIT_TIME, STREAM_ARN
-
-
+from helpers.k8s import GracefulKiller
+from env import UPDATING_SECRETS, WAIT_TIME, STREAM_ARN
+from backends.sync_secret import syncSecretFromBackend
 
 Shard = collections.namedtuple(
     typename="Shard",
@@ -22,7 +19,6 @@ Shard = collections.namedtuple(
 
 
 def list_all_shards(stream_arn: str, **kwargs: dict) -> typing.List[Shard]:
-    
     def _shard_response_to_shard(response: dict) -> Shard:
         return Shard(
             stream_arn=stream_arn,
@@ -33,6 +29,7 @@ def list_all_shards(stream_arn: str, **kwargs: dict) -> typing.List[Shard]:
             ending_sequence_number=response.get(
                 "SequenceNumberRange", {}).get("EndingSequenceNumber")
         )
+
     client = boto3.client("dynamodbstreams")
     pagination_args = {}
     exclusive_start_shard_id = kwargs.get("next_page_identifier", None)
@@ -70,7 +67,7 @@ def get_shard_iterator(shard: Shard, iterator_type: str = "LATEST") -> str:
         StreamArn=shard.stream_arn,
         ShardId=shard.shard_id,
         ShardIteratorType=iterator_type
-    )    
+    )
     return response["ShardIterator"]
 
 
@@ -80,8 +77,8 @@ def get_next_records(shard_iterator: str) -> typing.Tuple[typing.List[dict], str
     return response["Records"], response.get("NextShardIterator")
 
 
-def shard_watcher(shard: Shard, callables: typing.List[typing.Callable], 
-      start_at_oldest = False, updating_secrets = UPDATING_SECRETS):
+def shard_watcher(shard: Shard, callables: typing.List[typing.Callable],
+                  start_at_oldest=False, updating_secrets=UPDATING_SECRETS):
     shard_iterator_type = "TRIM_HORIZON" if start_at_oldest else "LATEST"
     shard_iterator = get_shard_iterator(shard, shard_iterator_type)
     while shard_iterator is not None:
@@ -92,7 +89,7 @@ def shard_watcher(shard: Shard, callables: typing.List[typing.Callable],
                 if updating_secrets.value:
                     updating_secrets.value = 0
                     time.sleep(WAIT_TIME)
-                    syncSecretFromDDB(updating_secrets)
+                    syncSecretFromBackend(updating_secrets)
         time.sleep(0.5)
 
 
@@ -118,9 +115,9 @@ def start_watching(stream_arn: str, callables: typing.List[typing.Callable]) -> 
 
 def print_summary(change_record: dict):
     IST = pytz.timezone('Asia/Kolkata')
-    changed_at:datetime = change_record["dynamodb"]["ApproximateCreationDateTime"]
-    event_type:str = change_record["eventName"]
-    item_keys:dict = change_record["dynamodb"]["Keys"]
+    changed_at: datetime = change_record["dynamodb"]["ApproximateCreationDateTime"]
+    event_type: str = change_record["eventName"]
+    item_keys: dict = change_record["dynamodb"]["Keys"]
     item_key_list = []
     for key in sorted(item_keys.keys()):
         value = item_keys[key][list(item_keys[key].keys())[0]]

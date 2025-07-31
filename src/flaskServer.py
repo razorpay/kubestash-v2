@@ -1,7 +1,8 @@
 from flask import Flask, abort, request
 from waitress import serve
-from helpers import syncSecretFromDDB, statusFile
-from helpers import FLASK_API_KEY, PROMETHEUS_METRICS, VERBOSE
+from helpers.status_file import statusFile
+from env import FLASK_API_KEY, VERBOSE
+from metrics.prometheus_metrics import PROMETHEUS_METRICS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import logging
